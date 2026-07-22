@@ -19,6 +19,11 @@
   html, body {
     margin: 0;
     padding: 0;
+    height: auto;
+  }
+  div, section, footer, article, p {
+    margin-bottom: 0;
+    padding-bottom: 0;
   }
   body {
     font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
@@ -33,7 +38,7 @@
     background: var(--card-bg);
     border-radius: 16px;
     box-shadow: 0 2px 12px rgba(26, 115, 232, 0.08);
-    padding: 24px 20px;
+    padding: 24px 20px 0;
   }
   h1 {
     font-size: 1.35rem;
@@ -126,7 +131,9 @@
   }
   .result {
     margin-top: 22px;
+    margin-bottom: 0;
     padding: 20px;
+    padding-bottom: 16px;
     border-radius: 12px;
     background: linear-gradient(135deg, #e8f0fe 0%, #eef4ff 100%);
     border: 1.5px solid #c9dcfb;
@@ -159,6 +166,9 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: 4px;
+  }
+  .result-detail div:last-child {
+    margin-bottom: 0;
   }
   .result-detail span:last-child {
     color: var(--text);

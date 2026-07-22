@@ -173,6 +173,81 @@
     color: var(--text-light);
     text-align: center;
   }
+
+  .popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 1000;
+  }
+  .popup-overlay.show {
+    display: flex;
+  }
+  .popup-box {
+    width: 100%;
+    max-width: 380px;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 24px 20px 18px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    animation: popup-in 0.18s ease;
+  }
+  @keyframes popup-in {
+    from { transform: translateY(8px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .popup-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 18px;
+  }
+  .popup-link {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px 14px;
+    margin-bottom: 10px;
+    background: #ff6600;
+    color: #fff;
+    font-size: 0.98rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 10px;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .popup-link:hover {
+    background: #e65c00;
+  }
+  .popup-link:active {
+    transform: translateY(1px);
+  }
+  .popup-close {
+    width: 100%;
+    margin-top: 6px;
+    padding: 12px;
+    background: #f1f3f5;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .popup-close:hover {
+    background: #e5e7eb;
+  }
+  .popup-disclaimer {
+    margin: 14px 0 0;
+    font-size: 0.72rem;
+    color: var(--text-light);
+    line-height: 1.4;
+  }
 </style>
 </head>
 <body>
@@ -218,6 +293,17 @@
   <p class="footnote">본 계산기는 근로기준법 제34조 및 근로자퇴직급여 보장법에 따른 참고용 계산 결과이며, 실제 퇴직금과 차이가 있을 수 있습니다.</p>
 </div>
 
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-box">
+    <p class="popup-title">퇴직 후 재테크 추천 도서 📚</p>
+    <a class="popup-link" href="https://link.coupang.com/a/fz6okLGijI" target="_blank" rel="noopener noreferrer">추천 도서 1 보러가기</a>
+    <a class="popup-link" href="https://link.coupang.com/a/fz6qCcsEwK" target="_blank" rel="noopener noreferrer">추천 도서 2 보러가기</a>
+    <a class="popup-link" href="https://link.coupang.com/a/fz6sxdEKkK" target="_blank" rel="noopener noreferrer">추천 도서 3 보러가기</a>
+    <button class="popup-close" id="popupCloseBtn" type="button">닫기</button>
+    <p class="popup-disclaimer">이 포스팅은 쿠팡 파트너스 활동의 일환으로 일정액의 수수료를 제공받습니다.</p>
+  </div>
+</div>
+
 <script>
   var startInput = document.getElementById('startDate');
   var endInput = document.getElementById('endDate');
@@ -230,6 +316,10 @@
   var detailPeriod = document.getElementById('detailPeriod');
   var detailDays = document.getElementById('detailDays');
   var detailWage = document.getElementById('detailWage');
+  var popupOverlay = document.getElementById('popupOverlay');
+  var popupCloseBtn = document.getElementById('popupCloseBtn');
+
+  var pendingOutcome = null;
 
   function formatNumber(num) {
     return num.toLocaleString('ko-KR');
@@ -304,19 +394,42 @@
     var totalDays = Math.round((end - start) / msPerDay) + 1;
 
     if (totalDays < 365) {
-      warningBox.classList.add('show');
+      pendingOutcome = { type: 'warning' };
+      popupOverlay.classList.add('show');
       return;
     }
 
     var severancePay = avgWage * (totalDays / 365);
     var ymd = diffInYearsMonthsDays(start, end);
 
-    resultAmount.textContent = formatNumber(Math.round(severancePay)) + '원';
-    detailPeriod.textContent = ymd.years + '년 ' + ymd.months + '개월 ' + ymd.days + '일';
-    detailDays.textContent = formatNumber(totalDays) + '일';
-    detailWage.textContent = formatNumber(avgWage) + '원';
+    pendingOutcome = {
+      type: 'result',
+      amount: formatNumber(Math.round(severancePay)) + '원',
+      period: ymd.years + '년 ' + ymd.months + '개월 ' + ymd.days + '일',
+      days: formatNumber(totalDays) + '일',
+      wage: formatNumber(avgWage) + '원'
+    };
+    popupOverlay.classList.add('show');
+  });
 
-    resultBox.classList.add('show');
+  popupCloseBtn.addEventListener('click', function () {
+    popupOverlay.classList.remove('show');
+
+    if (!pendingOutcome) {
+      return;
+    }
+
+    if (pendingOutcome.type === 'warning') {
+      warningBox.classList.add('show');
+    } else if (pendingOutcome.type === 'result') {
+      resultAmount.textContent = pendingOutcome.amount;
+      detailPeriod.textContent = pendingOutcome.period;
+      detailDays.textContent = pendingOutcome.days;
+      detailWage.textContent = pendingOutcome.wage;
+      resultBox.classList.add('show');
+    }
+
+    pendingOutcome = null;
   });
 </script>
 

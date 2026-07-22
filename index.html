@@ -57,7 +57,6 @@
     margin-bottom: 6px;
     color: var(--text);
   }
-  input[type="date"],
   input[type="text"] {
     width: 100%;
     padding: 12px 14px;
@@ -70,8 +69,35 @@
     color: var(--text);
     font-family: inherit;
   }
-  input[type="date"]:focus,
   input[type="text"]:focus {
+    border-color: var(--primary);
+  }
+  .date-select-group {
+    display: flex;
+    gap: 6px;
+  }
+  .date-select-group select {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    padding: 12px 6px;
+    font-size: 0.95rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    background: #fff;
+    color: var(--text);
+    font-family: inherit;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 16px;
+    padding-right: 22px;
+    transition: border-color 0.15s ease;
+  }
+  .date-select-group select:focus {
     border-color: var(--primary);
   }
   .hint {
@@ -252,13 +278,21 @@
   <p class="subtitle">입사일 · 퇴사일 · 평균임금으로 간편하게 계산해보세요</p>
 
   <div class="field">
-    <label for="startDate">입사일</label>
-    <input type="date" id="startDate">
+    <label>입사일</label>
+    <div class="date-select-group">
+      <select id="startYear" aria-label="입사 연도"></select>
+      <select id="startMonth" aria-label="입사 월"></select>
+      <select id="startDay" aria-label="입사 일"></select>
+    </div>
   </div>
 
   <div class="field">
-    <label for="endDate">퇴사일</label>
-    <input type="date" id="endDate">
+    <label>퇴사일</label>
+    <div class="date-select-group">
+      <select id="endYear" aria-label="퇴사 연도"></select>
+      <select id="endMonth" aria-label="퇴사 월"></select>
+      <select id="endDay" aria-label="퇴사 일"></select>
+    </div>
   </div>
 
   <div class="field">
@@ -298,8 +332,12 @@
 </div>
 
 <script>
-  var startInput = document.getElementById('startDate');
-  var endInput = document.getElementById('endDate');
+  var startYear = document.getElementById('startYear');
+  var startMonth = document.getElementById('startMonth');
+  var startDay = document.getElementById('startDay');
+  var endYear = document.getElementById('endYear');
+  var endMonth = document.getElementById('endMonth');
+  var endDay = document.getElementById('endDay');
   var wageInput = document.getElementById('avgWage');
   var calcBtn = document.getElementById('calcBtn');
   var errorBox = document.getElementById('errorBox');
@@ -313,6 +351,55 @@
   var popupLinkBtn = document.getElementById('popupLinkBtn');
 
   var pendingOutcome = null;
+
+  function daysInMonth(year, month) {
+    return new Date(year, month, 0).getDate();
+  }
+
+  function populateOptions(select, start, end, suffix) {
+    for (var i = start; i <= end; i++) {
+      var opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = i + suffix;
+      select.appendChild(opt);
+    }
+  }
+
+  function populateDayOptions(daySelect, year, month, preferredDay) {
+    var maxDay = daysInMonth(year, month);
+    var current = preferredDay || parseInt(daySelect.value, 10) || 1;
+    daySelect.innerHTML = '';
+    for (var d = 1; d <= maxDay; d++) {
+      var opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = d + '일';
+      daySelect.appendChild(opt);
+    }
+    daySelect.value = Math.min(current, maxDay);
+  }
+
+  function setupDateSelects(yearSelect, monthSelect, daySelect, defaultYear, defaultMonth, defaultDay) {
+    populateOptions(yearSelect, 1990, 2030, '년');
+    populateOptions(monthSelect, 1, 12, '월');
+    yearSelect.value = defaultYear;
+    monthSelect.value = defaultMonth;
+    populateDayOptions(daySelect, defaultYear, defaultMonth, defaultDay);
+
+    function onYearOrMonthChange() {
+      populateDayOptions(daySelect, parseInt(yearSelect.value, 10), parseInt(monthSelect.value, 10));
+    }
+    yearSelect.addEventListener('change', onYearOrMonthChange);
+    monthSelect.addEventListener('change', onYearOrMonthChange);
+  }
+
+  var today = new Date();
+  setupDateSelects(startYear, startMonth, startDay, 2023, 1, 1);
+  setupDateSelects(endYear, endMonth, endDay, today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+  function pad2(n) {
+    n = parseInt(n, 10);
+    return (n < 10 ? '0' : '') + n;
+  }
 
   var COUPANG_LINKS = [
     'https://link.coupang.com/a/fz6okLGijI',
@@ -434,14 +521,10 @@
   calcBtn.addEventListener('click', function () {
     clearMessages();
 
-    var startVal = startInput.value;
-    var endVal = endInput.value;
+    var startVal = startYear.value + '-' + pad2(startMonth.value) + '-' + pad2(startDay.value);
+    var endVal = endYear.value + '-' + pad2(endMonth.value) + '-' + pad2(endDay.value);
     var wageRaw = wageInput.value.replace(/[^0-9]/g, '');
 
-    if (!startVal || !endVal) {
-      showError('입사일과 퇴사일을 모두 입력해주세요.');
-      return;
-    }
     if (!wageRaw) {
       showError('30일 평균임금을 입력해주세요.');
       return;

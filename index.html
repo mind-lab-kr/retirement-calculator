@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>퇴직금 계산기</title>
+<style>
+  :root {
+    --primary: #1a73e8;
+    --primary-dark: #1557b0;
+    --bg: #f5f8ff;
+    --card-bg: #ffffff;
+    --text: #1f2937;
+    --text-light: #6b7280;
+    --border: #e2e8f0;
+    --danger: #d93025;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 16px;
+    line-height: 1.5;
+  }
+  .card {
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(26, 115, 232, 0.08);
+    padding: 24px 20px 28px;
+  }
+  h1 {
+    font-size: 1.35rem;
+    text-align: center;
+    color: var(--primary);
+    margin: 0 0 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin: 0 0 20px;
+  }
+  .field {
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  input[type="date"],
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.15s ease;
+    background: #fff;
+    color: var(--text);
+    font-family: inherit;
+  }
+  input[type="date"]:focus,
+  input[type="text"]:focus {
+    border-color: var(--primary);
+  }
+  .hint {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--primary);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: background 0.15s ease;
+  }
+  button:hover {
+    background: var(--primary-dark);
+  }
+  button:active {
+    transform: translateY(1px);
+  }
+  .result {
+    margin-top: 22px;
+    padding: 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e8f0fe 0%, #eef4ff 100%);
+    border: 1.5px solid #c9dcfb;
+    text-align: center;
+    display: none;
+  }
+  .result.show {
+    display: block;
+  }
+  .result-label {
+    font-size: 0.88rem;
+    color: var(--text-light);
+    margin-bottom: 6px;
+  }
+  .result-amount {
+    font-size: 1.9rem;
+    font-weight: 800;
+    color: var(--primary);
+    word-break: break-all;
+  }
+  .result-detail {
+    margin-top: 12px;
+    font-size: 0.82rem;
+    color: var(--text-light);
+    text-align: left;
+    border-top: 1px dashed #c9dcfb;
+    padding-top: 12px;
+  }
+  .result-detail div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .result-detail span:last-child {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .warning {
+    margin-top: 22px;
+    padding: 16px;
+    border-radius: 12px;
+    background: #fdeceb;
+    border: 1.5px solid #f6c6c1;
+    color: var(--danger);
+    text-align: center;
+    font-size: 0.92rem;
+    font-weight: 600;
+    display: none;
+  }
+  .warning.show {
+    display: block;
+  }
+  .error {
+    margin-top: 22px;
+    padding: 14px;
+    border-radius: 12px;
+    background: #fdeceb;
+    border: 1.5px solid #f6c6c1;
+    color: var(--danger);
+    text-align: center;
+    font-size: 0.88rem;
+    display: none;
+  }
+  .error.show {
+    display: block;
+  }
+  .footnote {
+    margin-top: 18px;
+    font-size: 0.74rem;
+    color: var(--text-light);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>퇴직금 계산기</h1>
+  <p class="subtitle">입사일 · 퇴사일 · 평균임금으로 간편하게 계산해보세요</p>
+
+  <div class="field">
+    <label for="startDate">입사일</label>
+    <input type="date" id="startDate">
+  </div>
+
+  <div class="field">
+    <label for="endDate">퇴사일</label>
+    <input type="date" id="endDate">
+  </div>
+
+  <div class="field">
+    <label for="avgWage">30일 평균임금 (원)</label>
+    <input type="text" id="avgWage" inputmode="numeric" placeholder="예: 6,000,000">
+    <div class="hint">퇴직 전 3개월간 지급된 임금 총액을 그 기간의 총 일수로 나눈 후 30을 곱한 금액입니다.</div>
+  </div>
+
+  <button id="calcBtn" type="button">퇴직금 계산하기</button>
+
+  <div class="error" id="errorBox"></div>
+
+  <div class="warning" id="warningBox">
+    근속기간이 1년 미만이므로 퇴직금이 발생하지 않습니다.
+  </div>
+
+  <div class="result" id="resultBox">
+    <div class="result-label">예상 퇴직금</div>
+    <div class="result-amount" id="resultAmount">0원</div>
+    <div class="result-detail">
+      <div><span>근속기간</span><span id="detailPeriod">-</span></div>
+      <div><span>근속일수</span><span id="detailDays">-</span></div>
+      <div><span>30일 평균임금</span><span id="detailWage">-</span></div>
+    </div>
+  </div>
+
+  <p class="footnote">본 계산기는 근로기준법 제34조 및 근로자퇴직급여 보장법에 따른 참고용 계산 결과이며, 실제 퇴직금과 차이가 있을 수 있습니다.</p>
+</div>
+
+<script>
+  var startInput = document.getElementById('startDate');
+  var endInput = document.getElementById('endDate');
+  var wageInput = document.getElementById('avgWage');
+  var calcBtn = document.getElementById('calcBtn');
+  var errorBox = document.getElementById('errorBox');
+  var warningBox = document.getElementById('warningBox');
+  var resultBox = document.getElementById('resultBox');
+  var resultAmount = document.getElementById('resultAmount');
+  var detailPeriod = document.getElementById('detailPeriod');
+  var detailDays = document.getElementById('detailDays');
+  var detailWage = document.getElementById('detailWage');
+
+  function formatNumber(num) {
+    return num.toLocaleString('ko-KR');
+  }
+
+  wageInput.addEventListener('input', function () {
+    var digits = wageInput.value.replace(/[^0-9]/g, '');
+    wageInput.value = digits ? formatNumber(parseInt(digits, 10)) : '';
+  });
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.classList.add('show');
+    warningBox.classList.remove('show');
+    resultBox.classList.remove('show');
+  }
+
+  function clearMessages() {
+    errorBox.classList.remove('show');
+    warningBox.classList.remove('show');
+    resultBox.classList.remove('show');
+  }
+
+  function diffInYearsMonthsDays(start, end) {
+    var years = end.getFullYear() - start.getFullYear();
+    var months = end.getMonth() - start.getMonth();
+    var days = end.getDate() - start.getDate();
+
+    if (days < 0) {
+      months -= 1;
+      var prevMonth = new Date(end.getFullYear(), end.getMonth(), 0);
+      days += prevMonth.getDate();
+    }
+    if (months < 0) {
+      years -= 1;
+      months += 12;
+    }
+    return { years: years, months: months, days: days };
+  }
+
+  calcBtn.addEventListener('click', function () {
+    clearMessages();
+
+    var startVal = startInput.value;
+    var endVal = endInput.value;
+    var wageRaw = wageInput.value.replace(/[^0-9]/g, '');
+
+    if (!startVal || !endVal) {
+      showError('입사일과 퇴사일을 모두 입력해주세요.');
+      return;
+    }
+    if (!wageRaw) {
+      showError('30일 평균임금을 입력해주세요.');
+      return;
+    }
+
+    var start = new Date(startVal + 'T00:00:00');
+    var end = new Date(endVal + 'T00:00:00');
+
+    if (end <= start) {
+      showError('퇴사일은 입사일보다 이후 날짜여야 합니다.');
+      return;
+    }
+
+    var avgWage = parseInt(wageRaw, 10);
+    if (avgWage <= 0) {
+      showError('평균임금을 올바르게 입력해주세요.');
+      return;
+    }
+
+    var msPerDay = 1000 * 60 * 60 * 24;
+    var totalDays = Math.round((end - start) / msPerDay) + 1;
+
+    if (totalDays < 365) {
+      warningBox.classList.add('show');
+      return;
+    }
+
+    var severancePay = avgWage * (totalDays / 365);
+    var ymd = diffInYearsMonthsDays(start, end);
+
+    resultAmount.textContent = formatNumber(Math.round(severancePay)) + '원';
+    detailPeriod.textContent = ymd.years + '년 ' + ymd.months + '개월 ' + ymd.days + '일';
+    detailDays.textContent = formatNumber(totalDays) + '일';
+    detailWage.textContent = formatNumber(avgWage) + '원';
+
+    resultBox.classList.add('show');
+  });
+</script>
+
+</body>
+</html>

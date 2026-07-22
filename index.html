@@ -237,21 +237,6 @@
     color: var(--primary);
     line-height: 1.4;
   }
-  .popup-close {
-    width: 100%;
-    margin-top: 6px;
-    padding: 12px;
-    background: #f1f3f5;
-    color: var(--text);
-    font-size: 0.95rem;
-    font-weight: 700;
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-  }
-  .popup-close:hover {
-    background: #e5e7eb;
-  }
   .popup-disclaimer {
     margin: 14px 0 0;
     font-size: 0.72rem;
@@ -307,8 +292,7 @@
   <div class="popup-box">
     <p class="popup-title">퇴직 후 재테크 추천 도서 📚</p>
     <button class="popup-link" id="popupLinkBtn" type="button">📚 퇴직 후 재테크 도서 보러가기</button>
-    <p class="popup-notice">📌 링크 클릭 후 창을 닫으면 계산 결과를 확인할 수 있습니다.</p>
-    <button class="popup-close" id="popupCloseBtn" type="button">닫기</button>
+    <p class="popup-notice">📌 도서 링크 클릭 후 계산 결과를 확인할 수 있습니다.</p>
     <p class="popup-disclaimer">이 포스팅은 쿠팡 파트너스 활동의 일환으로 일정액의 수수료를 제공받습니다.</p>
   </div>
 </div>
@@ -326,7 +310,6 @@
   var detailDays = document.getElementById('detailDays');
   var detailWage = document.getElementById('detailWage');
   var popupOverlay = document.getElementById('popupOverlay');
-  var popupCloseBtn = document.getElementById('popupCloseBtn');
   var popupLinkBtn = document.getElementById('popupLinkBtn');
 
   var pendingOutcome = null;
@@ -369,12 +352,44 @@
       });
   }
 
+  function closePopupAndShowResult() {
+    popupOverlay.classList.remove('show');
+
+    if (!pendingOutcome) {
+      return;
+    }
+
+    if (pendingOutcome.type === 'warning') {
+      warningBox.classList.add('show');
+    } else if (pendingOutcome.type === 'result') {
+      resultAmount.textContent = pendingOutcome.amount;
+      detailPeriod.textContent = pendingOutcome.period;
+      detailDays.textContent = pendingOutcome.days;
+      detailWage.textContent = pendingOutcome.wage;
+      resultBox.classList.add('show');
+    }
+
+    pendingOutcome = null;
+  }
+
   popupLinkBtn.addEventListener('click', function () {
     var newTab = window.open('about:blank', '_blank');
     if (newTab) {
       newTab.opener = null;
     }
     openLinkWithFallback(COUPANG_LINKS, 0, newTab);
+    closePopupAndShowResult();
+  });
+
+  popupOverlay.addEventListener('click', function (e) {
+    e.stopPropagation();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (popupOverlay.classList.contains('show') && e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   });
 
   function formatNumber(num) {
@@ -466,26 +481,6 @@
       wage: formatNumber(avgWage) + '원'
     };
     popupOverlay.classList.add('show');
-  });
-
-  popupCloseBtn.addEventListener('click', function () {
-    popupOverlay.classList.remove('show');
-
-    if (!pendingOutcome) {
-      return;
-    }
-
-    if (pendingOutcome.type === 'warning') {
-      warningBox.classList.add('show');
-    } else if (pendingOutcome.type === 'result') {
-      resultAmount.textContent = pendingOutcome.amount;
-      detailPeriod.textContent = pendingOutcome.period;
-      detailDays.textContent = pendingOutcome.days;
-      detailWage.textContent = pendingOutcome.wage;
-      resultBox.classList.add('show');
-    }
-
-    pendingOutcome = null;
   });
 </script>
 

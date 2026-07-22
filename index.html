@@ -218,7 +218,10 @@
     font-size: 0.98rem;
     font-weight: 700;
     text-decoration: none;
+    border: none;
     border-radius: 10px;
+    cursor: pointer;
+    font-family: inherit;
     transition: background 0.15s ease, transform 0.1s ease;
   }
   .popup-link:hover {
@@ -226,6 +229,13 @@
   }
   .popup-link:active {
     transform: translateY(1px);
+  }
+  .popup-notice {
+    margin: 4px 0 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.4;
   }
   .popup-close {
     width: 100%;
@@ -296,9 +306,8 @@
 <div class="popup-overlay" id="popupOverlay">
   <div class="popup-box">
     <p class="popup-title">퇴직 후 재테크 추천 도서 📚</p>
-    <a class="popup-link" href="https://link.coupang.com/a/fz6okLGijI" target="_blank" rel="noopener noreferrer">추천 도서 1 보러가기</a>
-    <a class="popup-link" href="https://link.coupang.com/a/fz6qCcsEwK" target="_blank" rel="noopener noreferrer">추천 도서 2 보러가기</a>
-    <a class="popup-link" href="https://link.coupang.com/a/fz6sxdEKkK" target="_blank" rel="noopener noreferrer">추천 도서 3 보러가기</a>
+    <button class="popup-link" id="popupLinkBtn" type="button">📚 퇴직 후 재테크 도서 보러가기</button>
+    <p class="popup-notice">📌 링크 클릭 후 창을 닫으면 계산 결과를 확인할 수 있습니다.</p>
     <button class="popup-close" id="popupCloseBtn" type="button">닫기</button>
     <p class="popup-disclaimer">이 포스팅은 쿠팡 파트너스 활동의 일환으로 일정액의 수수료를 제공받습니다.</p>
   </div>
@@ -318,8 +327,55 @@
   var detailWage = document.getElementById('detailWage');
   var popupOverlay = document.getElementById('popupOverlay');
   var popupCloseBtn = document.getElementById('popupCloseBtn');
+  var popupLinkBtn = document.getElementById('popupLinkBtn');
 
   var pendingOutcome = null;
+
+  var COUPANG_LINKS = [
+    'https://link.coupang.com/a/fz6okLGijI',
+    'https://link.coupang.com/a/fz6qCcsEwK',
+    'https://link.coupang.com/a/fz6sxdEKkK'
+  ];
+
+  function openLinkWithFallback(links, index, targetTab) {
+    if (index >= links.length) {
+      return;
+    }
+    var url = links[index];
+    var settled = false;
+
+    var timer = setTimeout(function () {
+      if (settled) return;
+      settled = true;
+      openLinkWithFallback(links, index + 1, targetTab);
+    }, 4000);
+
+    fetch(url, { mode: 'no-cors', method: 'HEAD' })
+      .then(function () {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        if (targetTab && !targetTab.closed) {
+          targetTab.location.href = url;
+        } else {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        }
+      })
+      .catch(function () {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        openLinkWithFallback(links, index + 1, targetTab);
+      });
+  }
+
+  popupLinkBtn.addEventListener('click', function () {
+    var newTab = window.open('about:blank', '_blank');
+    if (newTab) {
+      newTab.opener = null;
+    }
+    openLinkWithFallback(COUPANG_LINKS, 0, newTab);
+  });
 
   function formatNumber(num) {
     return num.toLocaleString('ko-KR');
